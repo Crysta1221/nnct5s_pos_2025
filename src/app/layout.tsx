@@ -12,6 +12,8 @@ const notoSans = Noto_Sans_JP({
 export const metadata: Metadata = {
   title: "2025 高専焼き POSシステム",
   description: "2025 Kosenyaki POS System.",
+  manifest: "/manifest.json",
+  themeColor: "#000000",
 };
 
 export default function RootLayout({
@@ -23,11 +25,10 @@ export default function RootLayout({
     <html lang='ja' suppressHydrationWarning>
       <body className={`${notoSans.variable} antialiased`}>
         <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
+          attribute='class'
+          defaultTheme='system'
           enableSystem
-          disableTransitionOnChange
-        >
+          disableTransitionOnChange>
           {children}
         </ThemeProvider>
       </body>
