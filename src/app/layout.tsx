@@ -18,8 +18,8 @@ export const metadata: Metadata = {
     title: "高専焼きPOS",
   },
   icons: {
-    icon: "/icon512_rounded.png",
-    apple: "/icon512_rounded.png",
+    icon: "/logo.png",
+    apple: "/logo.png",
   },
   applicationName: "高専焼きPOS",
 };
