@@ -18,8 +18,18 @@ export const metadata: Metadata = {
     title: "高専焼きPOS",
   },
   icons: {
-    icon: "/logo.png",
-    apple: "/logo.png",
+    icon: [
+      { url: "/logo.png", sizes: "any" },
+      { url: "/icon.png", sizes: "32x32", type: "image/png" },
+    ],
+    shortcut: "/logo.png",
+    apple: [{ url: "/logo.png", sizes: "180x180", type: "image/png" }],
+    other: [
+      {
+        rel: "icon",
+        url: "/logo.png",
+      },
+    ],
   },
   applicationName: "高専焼きPOS",
 };
@@ -39,6 +49,9 @@ export default function RootLayout({
   return (
     <html lang='ja' suppressHydrationWarning>
       <head>
+        <link rel='icon' href='/logo.png' type='image/png' />
+        <link rel='shortcut icon' href='/logo.png' />
+        <link rel='apple-touch-icon' href='/logo.png' />
         <link
           rel='manifest'
           href='/manifest.json'
