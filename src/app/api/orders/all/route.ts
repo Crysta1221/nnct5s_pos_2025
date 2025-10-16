@@ -12,6 +12,7 @@ export interface Order {
   subtotal: number;
   couponUsed: boolean;
   totalAmount: number;
+  reservationNumber: string;
 }
 
 export async function GET(request: NextRequest) {
@@ -21,7 +22,7 @@ export async function GET(request: NextRequest) {
 
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: spreadsheetId,
-      range: "order_list!A2:J",
+      range: "order_list!A2:K",
     });
 
     const rows = response.data.values;
@@ -51,6 +52,7 @@ export async function GET(request: NextRequest) {
         subtotal: Number.parseInt(row[7] || "0"),
         couponUsed: isCouponUsed,
         totalAmount: Number.parseInt(row[9] || "0"),
+        reservationNumber: row[10] || "",
       };
     });
 

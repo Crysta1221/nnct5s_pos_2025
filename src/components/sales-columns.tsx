@@ -58,4 +58,12 @@ export const columns: ColumnDef<Order>[] = [
       return `¥${amount}`;
     },
   },
+  {
+    accessorKey: "reservationNumber",
+    header: "予約番号",
+    cell: ({ row }) => {
+      const value = row.getValue("reservationNumber") as string;
+      return value || "-";
+    },
+  },
 ];

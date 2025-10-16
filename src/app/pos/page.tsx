@@ -224,6 +224,7 @@ export default function POSPage() {
           subtotal: subtotal,
           couponUsed: usedCouponCount,
           totalAmount: subtotal - usedCouponAmount,
+          reservationNumber: preOrderData ? `R${reservationNumber}` : "",
         }),
       });
 
@@ -297,6 +298,29 @@ export default function POSPage() {
 
     setIsSubmitting(true);
     try {
+      // まず予約番号が既に使用されているかチェック
+      const checkResponse = await fetch("/api/orders/check-reservation", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          reservationNumber: `R${reservationNumber}`,
+        }),
+      });
+
+      if (checkResponse.ok) {
+        const checkResult = await checkResponse.json();
+        if (!checkResult.canOrder) {
+          alert(
+            "この予約番号は既に使用されています。2回目以降の注文はできません。"
+          );
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
+      // 予約情報を検証
       const response = await fetch("/api/orders/verify-preorder", {
         method: "POST",
         headers: {

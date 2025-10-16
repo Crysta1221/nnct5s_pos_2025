@@ -43,6 +43,7 @@ export async function POST(request: NextRequest) {
       subtotal: body.subtotal || 0,
       couponUsed: body.couponUsed || 0,
       totalAmount: body.totalAmount || 0,
+      reservationNumber: body.reservationNumber || "",
     };
 
     const result = await appendOrderToSheet(orderData);

@@ -33,6 +33,7 @@ export type OrderData = {
   subtotal: number;
   couponUsed: number;
   totalAmount: number;
+  reservationNumber?: string;
 };
 
 export type PreOrderData = {
@@ -62,12 +63,13 @@ export async function appendOrderToSheet(data: OrderData) {
       data.subtotal,
       data.couponUsed,
       data.totalAmount,
+      data.reservationNumber || "",
     ],
   ];
 
   const response = await sheets.spreadsheets.values.append({
     spreadsheetId,
-    range: "order_list!A:J",
+    range: "order_list!A:K",
     valueInputOption: "USER_ENTERED",
     requestBody: {
       values,
@@ -83,7 +85,7 @@ export async function getOrdersFromSheet() {
 
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId,
-    range: "order_list!A:J",
+    range: "order_list!A:K",
   });
 
   return response.data.values;
