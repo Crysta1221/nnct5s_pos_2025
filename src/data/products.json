@@ -1,0 +1,20 @@
+[
+  {
+    "id": "anko",
+    "name": "高専焼き あんこ",
+    "price": 100,
+    "description": "定番のあんこ味"
+  },
+  {
+    "id": "custard",
+    "name": "高専焼き カスタード",
+    "price": 100,
+    "description": "なめらかなカスタードクリーム"
+  },
+  {
+    "id": "apple",
+    "name": "高専焼き リンゴジャム",
+    "price": 150,
+    "description": "甘酸っぱいリンゴジャム"
+  }
+]
