@@ -242,6 +242,8 @@ export default function POSPage() {
       setUsedCouponCount(0);
       setPreOrderData(null);
       setReservationNumber("");
+      setStudentId("");
+      setPreOrderStep("reservation");
     } catch (error) {
       console.error("Failed to save order:", error);
       alert("注文の保存に失敗しました。もう一度お試しください。");
