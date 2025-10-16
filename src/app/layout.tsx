@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Noto_Sans_JP } from "next/font/google";
 import "@/styles/globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -12,7 +12,22 @@ const notoSans = Noto_Sans_JP({
 export const metadata: Metadata = {
   title: "2025 高専焼き POSシステム",
   description: "2025 Kosenyaki POS System.",
-  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "高専焼きPOS",
+  },
+  icons: {
+    icon: "/icon512_rounded.png",
+    apple: "/icon512_rounded.png",
+  },
+  applicationName: "高専焼きPOS",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
   themeColor: "#000000",
 };
 
@@ -23,6 +38,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang='ja' suppressHydrationWarning>
+      <head>
+        <link
+          rel='manifest'
+          href='/manifest.json'
+          crossOrigin='use-credentials'
+        />
+      </head>
       <body className={`${notoSans.variable} antialiased`}>
         <ThemeProvider
           attribute='class'
