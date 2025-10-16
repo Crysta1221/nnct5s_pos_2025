@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import logo from "/public/logo.png";
@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { ErrorDialog } from "@/components/error-dialog";
 import { signIn } from "next-auth/react";
 
-export default function ManagementNumber() {
+function ManagementNumberForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const userId = searchParams.get("userId");
@@ -99,7 +99,7 @@ export default function ManagementNumber() {
           readOnly
           className='rounded-full h-12 text-center !text-2xl font-mono'
           placeholder=''
-          type="password"
+          type='password'
         />
       </div>
 
@@ -110,8 +110,7 @@ export default function ManagementNumber() {
       <Button
         className='mt-8 rounded-full max-w-xs w-full h-12 text-lg'
         onClick={handleSubmit}
-        disabled={isLoading}
-      >
+        disabled={isLoading}>
         {isLoading ? "認証中..." : "ログイン"}
       </Button>
 
@@ -121,5 +120,20 @@ export default function ManagementNumber() {
         message={errorMessage}
       />
     </div>
+  );
+}
+
+export default function ManagementNumber() {
+  return (
+    <Suspense
+      fallback={
+        <div className='flex flex-col justify-center items-center px-4 py-4'>
+          <Image src={logo} alt='logo' width={150} height={100} />
+          <h1 className='text-3xl mt-4 font-semibold'>管理番号入力</h1>
+          <div className='mt-8'>読み込み中...</div>
+        </div>
+      }>
+      <ManagementNumberForm />
+    </Suspense>
   );
 }
