@@ -301,17 +301,19 @@ export default function POSPage() {
           setStudentId("");
         }
       } else if (num === "OK") {
-        setReservationNumber((currentReservation) => {
-          setStudentId((currentStudent) => {
-            if (preOrderStep === "reservation" && currentReservation) {
-              setPreOrderStep("student");
-            } else if (preOrderStep === "student" && currentStudent) {
-              handleVerifyPreOrder();
-            }
-            return currentStudent;
-          });
-          return currentReservation;
-        });
+        if (preOrderStep === "reservation") {
+          if (reservationNumber) {
+            setPreOrderStep("student");
+          } else {
+            alert("整理番号を入力してください");
+          }
+        } else if (preOrderStep === "student") {
+          if (studentId && reservationNumber) {
+            handleVerifyPreOrder();
+          } else {
+            alert("整理番号と学籍番号を入力してください");
+          }
+        }
       } else if (num === "戻る") {
         setPreOrderStep("reservation");
         setStudentId("");
@@ -329,7 +331,7 @@ export default function POSPage() {
         }
       }
     },
-    [preOrderStep]
+    [preOrderStep, reservationNumber, studentId]
   );
 
   const handleVerifyPreOrder = async () => {
@@ -476,8 +478,11 @@ export default function POSPage() {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onClick={handleLogout}
-                  disabled={isLoggingOut}>
+                  onClick={isLoggingOut ? undefined : handleLogout}
+                  disabled={isLoggingOut}
+                  className={
+                    isLoggingOut ? "opacity-50 cursor-not-allowed" : ""
+                  }>
                   <LogOut className='w-4 h-4 mr-2' />
                   {isLoggingOut ? "ログアウト中..." : "ログアウト"}
                 </DropdownMenuItem>
