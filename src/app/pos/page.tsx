@@ -75,6 +75,7 @@ export default function POSPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [completedOrderNumber, setCompletedOrderNumber] = useState<string>("");
   const [isOrderCompleteOpen, setIsOrderCompleteOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleProductClick = (product: Product) => {
     setSelectedProduct(product);
@@ -300,11 +301,17 @@ export default function POSPage() {
           setStudentId("");
         }
       } else if (num === "OK") {
-        if (preOrderStep === "reservation" && reservationNumber) {
-          setPreOrderStep("student");
-        } else if (preOrderStep === "student" && studentId) {
-          handleVerifyPreOrder();
-        }
+        setReservationNumber((currentReservation) => {
+          setStudentId((currentStudent) => {
+            if (preOrderStep === "reservation" && currentReservation) {
+              setPreOrderStep("student");
+            } else if (preOrderStep === "student" && currentStudent) {
+              handleVerifyPreOrder();
+            }
+            return currentStudent;
+          });
+          return currentReservation;
+        });
       } else if (num === "戻る") {
         setPreOrderStep("reservation");
         setStudentId("");
@@ -322,7 +329,7 @@ export default function POSPage() {
         }
       }
     },
-    [preOrderStep, reservationNumber, studentId]
+    [preOrderStep]
   );
 
   const handleVerifyPreOrder = async () => {
@@ -438,7 +445,14 @@ export default function POSPage() {
   };
 
   const handleLogout = async () => {
-    await signOut({ redirectTo: "/login" });
+    if (isLoggingOut) return;
+    setIsLoggingOut(true);
+    try {
+      await signOut({ redirectTo: "/login" });
+    } catch (error) {
+      console.error("Logout failed:", error);
+      setIsLoggingOut(false);
+    }
   };
 
   return (
@@ -461,9 +475,11 @@ export default function POSPage() {
                     切り替え
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleLogout}>
+                <DropdownMenuItem
+                  onClick={handleLogout}
+                  disabled={isLoggingOut}>
                   <LogOut className='w-4 h-4 mr-2' />
-                  ログアウト
+                  {isLoggingOut ? "ログアウト中..." : "ログアウト"}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
