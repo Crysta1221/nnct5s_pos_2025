@@ -107,6 +107,25 @@ export async function DELETE(request: NextRequest) {
     const spreadsheetId = process.env.SPREAD_SHEET_ID;
     const sheets = getGoogleSheetsClient();
 
+    // スプレッドシート情報を取得してシートIDを確認
+    const spreadsheetInfo = await sheets.spreadsheets.get({
+      spreadsheetId: spreadsheetId,
+    });
+
+    // order_listシートのIDを取得
+    const orderListSheet = spreadsheetInfo.data.sheets?.find(
+      (sheet) => sheet.properties?.title === "order_list"
+    );
+
+    if (!orderListSheet?.properties?.sheetId) {
+      return NextResponse.json(
+        { error: "order_listシートが見つかりません" },
+        { status: 404 }
+      );
+    }
+
+    const sheetId = orderListSheet.properties.sheetId;
+
     // 注文を検索
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: spreadsheetId,
@@ -141,7 +160,7 @@ export async function DELETE(request: NextRequest) {
           {
             deleteDimension: {
               range: {
-                sheetId: 0, // order_listシートのID（最初のシートは通常0）
+                sheetId: sheetId, // 取得した正しいシートID
                 dimension: "ROWS",
                 startIndex: sheetRowIndex - 1,
                 endIndex: sheetRowIndex,
