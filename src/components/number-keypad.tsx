@@ -17,24 +17,39 @@ export const NumberKeypad = memo(function NumberKeypad({
   disabled = false,
 }: NumberKeypadProps) {
   const numbers = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"];
-  const touchHandledRef = useRef<boolean>(false);
+  const lastEventTimeRef = useRef<Map<string, number>>(new Map());
+  const touchStartTimeRef = useRef<Map<string, number>>(new Map());
 
   const createNumberHandler = useCallback(
     (num: string) => {
       return (e: React.MouseEvent | React.TouchEvent) => {
         if (disabled) return;
 
-        // タッチイベントの場合、フラグを立てる
-        if (e.type === "touchstart") {
-          touchHandledRef.current = true;
-          onNumberClick(num);
-          // 300ms後にフラグをリセット
-          setTimeout(() => {
-            touchHandledRef.current = false;
-          }, 300);
+        const now = Date.now();
+        const lastEventTime = lastEventTimeRef.current.get(num) || 0;
+
+        // 150ms以内の連続イベントは無視（デバウンス）
+        if (now - lastEventTime < 150) {
+          e.preventDefault();
+          return;
         }
-        // クリックイベントの場合、タッチで処理されていなければ実行
-        else if (e.type === "click" && !touchHandledRef.current) {
+
+        // タッチイベントの処理
+        if (e.type === "touchstart") {
+          e.preventDefault();
+          touchStartTimeRef.current.set(num, now);
+          lastEventTimeRef.current.set(num, now);
+          onNumberClick(num);
+        }
+        // クリックイベントの処理（タッチ後のクリックを防止）
+        else if (e.type === "click") {
+          const touchStartTime = touchStartTimeRef.current.get(num) || 0;
+          // タッチイベントから300ms以内のクリックは無視
+          if (now - touchStartTime < 300) {
+            e.preventDefault();
+            return;
+          }
+          lastEventTimeRef.current.set(num, now);
           onNumberClick(num);
         }
       };
@@ -46,13 +61,26 @@ export const NumberKeypad = memo(function NumberKeypad({
     (e: React.MouseEvent | React.TouchEvent) => {
       if (disabled) return;
 
+      const now = Date.now();
+      const lastEventTime = lastEventTimeRef.current.get("backspace") || 0;
+
+      if (now - lastEventTime < 150) {
+        e.preventDefault();
+        return;
+      }
+
       if (e.type === "touchstart") {
-        touchHandledRef.current = true;
+        e.preventDefault();
+        touchStartTimeRef.current.set("backspace", now);
+        lastEventTimeRef.current.set("backspace", now);
         onBackspace();
-        setTimeout(() => {
-          touchHandledRef.current = false;
-        }, 300);
-      } else if (e.type === "click" && !touchHandledRef.current) {
+      } else if (e.type === "click") {
+        const touchStartTime = touchStartTimeRef.current.get("backspace") || 0;
+        if (now - touchStartTime < 300) {
+          e.preventDefault();
+          return;
+        }
+        lastEventTimeRef.current.set("backspace", now);
         onBackspace();
       }
     },
@@ -63,13 +91,26 @@ export const NumberKeypad = memo(function NumberKeypad({
     (e: React.MouseEvent | React.TouchEvent) => {
       if (disabled) return;
 
+      const now = Date.now();
+      const lastEventTime = lastEventTimeRef.current.get("clear") || 0;
+
+      if (now - lastEventTime < 150) {
+        e.preventDefault();
+        return;
+      }
+
       if (e.type === "touchstart") {
-        touchHandledRef.current = true;
+        e.preventDefault();
+        touchStartTimeRef.current.set("clear", now);
+        lastEventTimeRef.current.set("clear", now);
         onClear();
-        setTimeout(() => {
-          touchHandledRef.current = false;
-        }, 300);
-      } else if (e.type === "click" && !touchHandledRef.current) {
+      } else if (e.type === "click") {
+        const touchStartTime = touchStartTimeRef.current.get("clear") || 0;
+        if (now - touchStartTime < 300) {
+          e.preventDefault();
+          return;
+        }
+        lastEventTimeRef.current.set("clear", now);
         onClear();
       }
     },
