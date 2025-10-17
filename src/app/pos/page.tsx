@@ -936,16 +936,6 @@ export default function POSPage() {
                 </Button>
               ))}
             </div>
-            {preOrderStep === "reservation" && reservationNumber && (
-              <p className='text-sm text-muted-foreground text-center'>
-                OKを押して学籍番号入力へ
-              </p>
-            )}
-            {preOrderStep === "student" && studentId && (
-              <p className='text-sm text-muted-foreground text-center'>
-                OKを押して確認へ
-              </p>
-            )}
           </div>
         </DialogContent>
       </Dialog>
