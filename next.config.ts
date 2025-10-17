@@ -11,6 +11,19 @@ const withPWA = nextpwa({
 
 const nextConfig = withPWA({
   reactStrictMode: true,
+  // Vercel環境でのパフォーマンス最適化
+  compiler: {
+    removeConsole: process.env.NODE_ENV === "production",
+  },
+  // イベントハンドラーの最適化
+  experimental: {
+    optimizePackageImports: [
+      "@radix-ui/react-dialog",
+      "@radix-ui/react-alert-dialog",
+    ],
+  },
+  // クライアント側のレンダリング最適化
+  poweredByHeader: false,
 } as any);
 
 export default nextConfig as NextConfig;

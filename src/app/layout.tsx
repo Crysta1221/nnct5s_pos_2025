@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Noto_Sans_JP } from "next/font/google";
 import "@/styles/globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
+import { Provider as JotaiProvider } from "jotai";
 
 const notoSans = Noto_Sans_JP({
   subsets: ["latin"],
@@ -59,13 +60,15 @@ export default function RootLayout({
         />
       </head>
       <body className={`${notoSans.variable} antialiased`}>
-        <ThemeProvider
-          attribute='class'
-          defaultTheme='system'
-          enableSystem
-          disableTransitionOnChange>
-          {children}
-        </ThemeProvider>
+        <JotaiProvider>
+          <ThemeProvider
+            attribute='class'
+            defaultTheme='system'
+            enableSystem
+            disableTransitionOnChange>
+            {children}
+          </ThemeProvider>
+        </JotaiProvider>
       </body>
     </html>
   );
