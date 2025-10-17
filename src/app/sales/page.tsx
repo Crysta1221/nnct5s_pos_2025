@@ -2,9 +2,20 @@
 
 import type { Order } from "@/app/api/orders/all/route";
 import { DataTable } from "@/components/data-table";
-import { columns } from "@/components/sales-columns";
+import { createColumns } from "@/components/sales-columns";
+import { EditOrderDialog } from "@/components/edit-order-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,11 +33,15 @@ import {
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 
 export default function SalesPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editingOrder, setEditingOrder] = useState<Order | null>(null);
+  const [deletingOrder, setDeletingOrder] = useState<Order | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const fetchOrders = async () => {
     try {
@@ -48,6 +63,76 @@ export default function SalesPage() {
   const handleLogout = async () => {
     await signOut({ redirectTo: "/login" });
   };
+
+  const handleEdit = (order: Order) => {
+    setEditingOrder(order);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleDelete = (order: Order) => {
+    setDeletingOrder(order);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleSaveEdit = async (
+    orderNumber: string,
+    updates: Partial<Order>
+  ) => {
+    try {
+      const response = await fetch("/api/orders/manage", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          orderNumber,
+          updates,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update order");
+      }
+
+      // 注文リストを再取得
+      await fetchOrders();
+      alert("注文を更新しました");
+    } catch (error) {
+      console.error("Failed to update order:", error);
+      throw error;
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deletingOrder) return;
+
+    try {
+      const response = await fetch(
+        `/api/orders/manage?orderNumber=${encodeURIComponent(
+          deletingOrder.orderNumber
+        )}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to delete order");
+      }
+
+      // 注文リストを再取得
+      await fetchOrders();
+      setIsDeleteDialogOpen(false);
+      setDeletingOrder(null);
+      alert("注文を削除しました");
+    } catch (error) {
+      console.error("Failed to delete order:", error);
+      alert("削除に失敗しました");
+    }
+  };
+
+  // カラム定義をメモ化
+  const columns = useMemo(() => createColumns(handleEdit, handleDelete), []);
 
   // 売上統計を計算
   const calculateStats = () => {
@@ -102,7 +187,7 @@ export default function SalesPage() {
         </div>
 
         <div className='flex-1 overflow-y-auto'>
-          <div className='container mx-auto py-10'>
+          <div className='container max-w-[1800px] mx-auto py-10 px-4'>
             <div className='flex items-center justify-between mb-6'>
               <h1 className='text-3xl font-bold'>売上管理</h1>
               <Button onClick={fetchOrders} disabled={loading}>
@@ -188,6 +273,37 @@ export default function SalesPage() {
             )}
           </div>
         </div>
+
+        {/* 編集ダイアログ */}
+        <EditOrderDialog
+          order={editingOrder}
+          open={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
+          onSave={handleSaveEdit}
+        />
+
+        {/* 削除確認ダイアログ */}
+        <AlertDialog
+          open={isDeleteDialogOpen}
+          onOpenChange={setIsDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>注文を削除しますか？</AlertDialogTitle>
+              <AlertDialogDescription>
+                注文番号「{deletingOrder?.orderNumber}」を削除します。
+                この操作は取り消せません。
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>キャンセル</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleConfirmDelete}
+                className='bg-destructive text-destructive-foreground hover:bg-destructive/90'>
+                削除
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );

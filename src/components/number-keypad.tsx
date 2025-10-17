@@ -118,7 +118,7 @@ export const NumberKeypad = memo(function NumberKeypad({
   );
 
   return (
-    <div className='grid grid-cols-3 gap-2 mt-4'>
+    <div className='grid grid-cols-3 gap-2'>
       {numbers.map((num) => {
         const handler = createNumberHandler(num);
         return (

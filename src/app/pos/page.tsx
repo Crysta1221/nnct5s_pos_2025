@@ -681,7 +681,7 @@ export default function POSPage() {
           <DialogHeader>
             <DialogTitle>{selectedProduct?.name}</DialogTitle>
           </DialogHeader>
-          <div className='space-y-4'>
+          <div className='space-y-3'>
             <div className='text-center'>
               <div className='text-4xl font-bold h-16 flex items-center justify-center border rounded-lg bg-muted overflow-hidden'>
                 <span className='truncate px-4'>{inputQuantity || "0"}</span>
@@ -694,7 +694,7 @@ export default function POSPage() {
             />
             <Button
               variant='default'
-              className='w-full h-16 text-2xl font-semibold'
+              className='w-full h-14 text-xl font-semibold'
               onClick={() => handleNumberPadClick("OK")}
               disabled={!inputQuantity || Number(inputQuantity) === 0}>
               OK
@@ -755,18 +755,16 @@ export default function POSPage() {
           )}
 
           {checkoutStep === "coupon" && (
-            <div className='space-y-4 py-4'>
-              <div className='text-center p-4 bg-muted rounded-lg'>
-                <p className='text-base text-muted-foreground mb-2'>
-                  現在の金額
-                </p>
-                <p className='text-3xl font-bold text-primary mb-2'>
+            <div className='space-y-2 py-4'>
+              <div className='text-center p-3 bg-muted rounded-lg'>
+                <p className='text-sm text-muted-foreground mb-1'>現在の金額</p>
+                <p className='text-2xl font-bold text-primary mb-1'>
                   ¥{totalAfterCoupon.toLocaleString()}
                 </p>
-                <p className='text-sm text-muted-foreground'>1枚 = ¥100</p>
+                <p className='text-xs text-muted-foreground'>1枚 = ¥100</p>
               </div>
               <div className='text-center'>
-                <div className='text-4xl font-bold h-20 flex items-center justify-center border-2 rounded-lg bg-muted overflow-hidden'>
+                <div className='text-3xl font-bold h-16 flex items-center justify-center border-2 rounded-lg bg-muted overflow-hidden'>
                   <span className='truncate px-4'>{couponCount || "0"}枚</span>
                 </div>
               </div>
@@ -777,7 +775,7 @@ export default function POSPage() {
               />
               <Button
                 variant='default'
-                className='w-full h-16 text-2xl font-semibold'
+                className='w-full h-14 text-xl font-semibold'
                 onClick={() => handleCouponNumberPad("OK")}
                 disabled={!couponCount || Number(couponCount) === 0}>
                 OK
@@ -786,16 +784,16 @@ export default function POSPage() {
           )}
 
           {checkoutStep === "cash" && (
-            <div className='space-y-4 py-4'>
-              <div className='text-center p-4 bg-muted rounded-lg space-y-2'>
-                <div className='flex justify-between text-sm border-b pb-2'>
+            <div className='space-y-2 py-4'>
+              <div className='text-center p-3 bg-muted rounded-lg space-y-1'>
+                <div className='flex justify-between text-xs border-b pb-1'>
                   <p className='text-muted-foreground'>小計</p>
                   <p className='font-semibold'>
                     ¥{(totalAfterCoupon + usedCouponAmount).toLocaleString()}
                   </p>
                 </div>
                 {usedCouponAmount > 0 && (
-                  <div className='flex justify-between text-sm text-green-600 border-b pb-2'>
+                  <div className='flex justify-between text-xs text-green-600 border-b pb-1'>
                     <p>クーポン利用 ×{usedCouponCount}枚</p>
                     <p className='font-semibold'>
                       -¥{usedCouponAmount.toLocaleString()}
@@ -803,14 +801,14 @@ export default function POSPage() {
                   </div>
                 )}
                 <div className='flex justify-between pt-1'>
-                  <p className='text-base font-semibold'>お支払い額</p>
-                  <p className='text-2xl font-bold text-primary'>
+                  <p className='text-sm font-semibold'>お支払い額</p>
+                  <p className='text-xl font-bold text-primary'>
                     ¥{totalAfterCoupon.toLocaleString()}
                   </p>
                 </div>
               </div>
               <div className='text-center'>
-                <div className='text-4xl font-bold h-20 flex items-center justify-center border-2 rounded-lg bg-muted overflow-hidden'>
+                <div className='text-3xl font-bold h-16 flex items-center justify-center border-2 rounded-lg bg-muted overflow-hidden'>
                   <span className='truncate px-4'>
                     ¥{cashAmount ? Number(cashAmount).toLocaleString() : "0"}
                   </span>
@@ -823,7 +821,7 @@ export default function POSPage() {
               />
               <Button
                 variant='default'
-                className='w-full h-16 text-2xl font-semibold'
+                className='w-full h-14 text-xl font-semibold'
                 onClick={() => handleCashNumberPad("OK")}
                 disabled={
                   totalAfterCoupon > 0 &&
@@ -940,7 +938,7 @@ export default function POSPage() {
                 : "学籍番号を入力"}
             </DialogTitle>
           </DialogHeader>
-          <div className='space-y-4'>
+          <div className='space-y-3'>
             <div className='text-center'>
               <div className='text-4xl font-bold h-16 flex items-center justify-center border rounded-lg bg-muted overflow-hidden'>
                 <span className='truncate px-4'>
@@ -963,7 +961,7 @@ export default function POSPage() {
             {preOrderStep === "student" && (
               <Button
                 variant='destructive'
-                className='w-full h-16 text-2xl font-semibold'
+                className='w-full h-14 text-xl font-semibold'
                 onClick={() => {
                   setPreOrderStep("reservation");
                   setStudentId("");
@@ -974,7 +972,7 @@ export default function POSPage() {
             )}
             <Button
               variant='default'
-              className='w-full h-16 text-2xl font-semibold'
+              className='w-full h-14 text-xl font-semibold'
               onClick={() => handlePreOrderNumberPad("OK")}
               disabled={
                 isSubmitting ||
