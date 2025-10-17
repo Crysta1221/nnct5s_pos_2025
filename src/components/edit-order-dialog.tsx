@@ -11,7 +11,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { Order } from "@/app/api/orders/all/route";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface EditOrderDialogProps {
   order: Order | null;
@@ -30,11 +30,11 @@ export function EditOrderDialog({
   const [saving, setSaving] = useState(false);
 
   // orderが変更されたらformDataを更新
-  useState(() => {
+  useEffect(() => {
     if (order) {
       setFormData(order);
     }
-  });
+  }, [order]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
