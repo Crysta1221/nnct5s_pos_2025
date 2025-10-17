@@ -4,13 +4,22 @@ import type { Order } from "@/app/api/orders/all/route";
 import { DataTable } from "@/components/data-table";
 import { columns } from "@/components/sales-columns";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { RefreshCw, Menu, LogOut, Home } from "lucide-react";
+import {
+  RefreshCw,
+  Menu,
+  LogOut,
+  Home,
+  DollarSign,
+  ShoppingCart,
+  Tag,
+} from "lucide-react";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -39,6 +48,29 @@ export default function SalesPage() {
   const handleLogout = async () => {
     await signOut({ redirectTo: "/login" });
   };
+
+  // 売上統計を計算
+  const calculateStats = () => {
+    const totalSubtotal = orders.reduce(
+      (sum, order) => sum + order.subtotal,
+      0
+    );
+    const totalSales = orders.reduce(
+      (sum, order) => sum + order.totalAmount,
+      0
+    );
+    const totalOrders = orders.length;
+    const totalCouponDiscount = totalSubtotal - totalSales;
+
+    return {
+      totalSubtotal,
+      totalSales,
+      totalOrders,
+      totalCouponDiscount,
+    };
+  };
+
+  const stats = calculateStats();
 
   return (
     <div className='bg-background'>
@@ -80,6 +112,73 @@ export default function SalesPage() {
                 更新
               </Button>
             </div>
+
+            {/* 売上統計カード */}
+            {!loading && (
+              <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6'>
+                <Card>
+                  <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+                    <CardTitle className='text-sm font-medium'>
+                      注文数
+                    </CardTitle>
+                    <ShoppingCart className='h-4 w-4 text-muted-foreground' />
+                  </CardHeader>
+                  <CardContent>
+                    <div className='text-2xl font-bold'>
+                      {stats.totalOrders}
+                    </div>
+                    <p className='text-xs text-muted-foreground'>総注文件数</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+                    <CardTitle className='text-sm font-medium'>
+                      小計合計
+                    </CardTitle>
+                    <DollarSign className='h-4 w-4 text-muted-foreground' />
+                  </CardHeader>
+                  <CardContent>
+                    <div className='text-2xl font-bold'>
+                      ¥{stats.totalSubtotal.toLocaleString()}
+                    </div>
+                    <p className='text-xs text-muted-foreground'>
+                      割引前の合計金額
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+                    <CardTitle className='text-sm font-medium'>
+                      クーポン割引
+                    </CardTitle>
+                    <Tag className='h-4 w-4 text-muted-foreground' />
+                  </CardHeader>
+                  <CardContent>
+                    <div className='text-2xl font-bold text-red-600'>
+                      -¥{stats.totalCouponDiscount.toLocaleString()}
+                    </div>
+                    <p className='text-xs text-muted-foreground'>総割引金額</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+                    <CardTitle className='text-sm font-medium'>
+                      総売上
+                    </CardTitle>
+                    <DollarSign className='h-4 w-4 text-muted-foreground' />
+                  </CardHeader>
+                  <CardContent>
+                    <div className='text-2xl font-bold text-green-600'>
+                      ¥{stats.totalSales.toLocaleString()}
+                    </div>
+                    <p className='text-xs text-muted-foreground'>
+                      実際の売上金額
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
             {loading ? (
               <div className='flex items-center justify-center h-64'>
                 <RefreshCw className='h-8 w-8 animate-spin' />

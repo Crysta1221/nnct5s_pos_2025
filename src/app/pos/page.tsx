@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import {
   Card,
   CardContent,
@@ -73,6 +73,8 @@ export default function POSPage() {
   const [usedCouponCount, setUsedCouponCount] = useState(0);
   const [purchasedItems, setPurchasedItems] = useState<CartItem[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [completedOrderNumber, setCompletedOrderNumber] = useState<string>("");
+  const [isOrderCompleteOpen, setIsOrderCompleteOpen] = useState(false);
 
   const handleProductClick = (product: Product) => {
     setSelectedProduct(product);
@@ -80,22 +82,32 @@ export default function POSPage() {
     setIsNumberPadOpen(true);
   };
 
-  const handleNumberPadClick = (num: string) => {
-    if (num === "C") {
-      setInputQuantity("");
-    } else if (num === "OK") {
-      if (selectedProduct && inputQuantity && Number(inputQuantity) > 0) {
-        addToCart(selectedProduct, Number(inputQuantity));
-        setIsNumberPadOpen(false);
+  const handleNumberPadClick = useCallback(
+    (num: string) => {
+      if (num === "C") {
         setInputQuantity("");
+      } else if (num === "OK") {
+        setInputQuantity((currentQuantity) => {
+          if (currentQuantity && Number(currentQuantity) > 0) {
+            const qty = Number(currentQuantity);
+            setIsNumberPadOpen(false);
+            // addToCartを呼ぶ前にselectedProductを確認
+            if (selectedProduct) {
+              addToCart(selectedProduct, qty);
+            }
+            return "";
+          }
+          return currentQuantity;
+        });
+      } else {
+        setInputQuantity((prev) => {
+          if (prev.length >= 3) return prev;
+          return prev + num;
+        });
       }
-    } else {
-      setInputQuantity((prev) => {
-        if (prev.length >= 3) return prev;
-        return prev + num;
-      });
-    }
-  };
+    },
+    [selectedProduct]
+  );
 
   const addToCart = (product: Product, quantity: number) => {
     setCart((prevCart) => {
@@ -144,48 +156,63 @@ export default function POSPage() {
     }
   };
 
-  const handleCouponNumberPad = (num: string) => {
+  const handleCouponNumberPad = useCallback((num: string) => {
     if (num === "C") {
       setCouponCount("");
     } else if (num === "OK") {
-      if (couponCount && Number(couponCount) > 0) {
-        const inputCount = Number(couponCount);
-        const discount = inputCount * 100;
-        const actualDiscount = Math.min(discount, totalAfterCoupon);
-        const newTotal = Math.max(0, totalAfterCoupon - actualDiscount);
-        setUsedCouponAmount(actualDiscount);
-        setUsedCouponCount(inputCount);
-        setTotalAfterCoupon(newTotal);
-        setCheckoutStep("cash");
-        setCouponCount("");
-      }
+      setCouponCount((currentCount) => {
+        if (currentCount && Number(currentCount) > 0) {
+          const inputCount = Number(currentCount);
+          const discount = inputCount * 100;
+          setTotalAfterCoupon((currentTotal) => {
+            const actualDiscount = Math.min(discount, currentTotal);
+            const newTotal = Math.max(0, currentTotal - actualDiscount);
+            setUsedCouponAmount(actualDiscount);
+            setUsedCouponCount(inputCount);
+            setCheckoutStep("cash");
+            return newTotal;
+          });
+          return "";
+        }
+        return currentCount;
+      });
     } else {
       setCouponCount((prev) => {
         if (prev.length >= 3) return prev;
         return prev + num;
       });
     }
-  };
+  }, []);
 
-  const handleCashNumberPad = (num: string) => {
+  const handleCashNumberPad = useCallback((num: string) => {
     if (num === "C") {
       setCashAmount("");
     } else if (num === "OK") {
-      if (totalAfterCoupon === 0) {
-        setCashAmount("0");
-        setCheckoutStep("change");
-      } else if (cashAmount && Number(cashAmount) >= totalAfterCoupon) {
-        setCheckoutStep("change");
-      } else if (cashAmount) {
-        alert("金額が不足しています");
-      }
+      setTotalAfterCoupon((currentTotal) => {
+        if (currentTotal === 0) {
+          setCashAmount("0");
+          setCheckoutStep("change");
+          return currentTotal;
+        }
+
+        setCashAmount((currentCash) => {
+          if (currentCash && Number(currentCash) >= currentTotal) {
+            setCheckoutStep("change");
+          } else if (currentCash) {
+            alert("金額が不足しています");
+          }
+          return currentCash;
+        });
+
+        return currentTotal;
+      });
     } else {
       setCashAmount((prev) => {
         if (prev.length >= 6) return prev;
         return prev + num;
       });
     }
-  };
+  }, []);
 
   const handleCheckoutComplete = async () => {
     if (isSubmitting) return;
@@ -232,6 +259,9 @@ export default function POSPage() {
         throw new Error("Failed to save order");
       }
 
+      const result = await response.json();
+      const orderNumber = result.orderNumber || "";
+
       setIsCheckoutOpen(false);
       setCart([]);
       setPurchasedItems([]);
@@ -245,6 +275,10 @@ export default function POSPage() {
       setReservationNumber("");
       setStudentId("");
       setPreOrderStep("reservation");
+
+      // 受付番号を設定して完了ダイアログを表示
+      setCompletedOrderNumber(orderNumber);
+      setIsOrderCompleteOpen(true);
     } catch (error) {
       console.error("Failed to save order:", error);
       alert("注文の保存に失敗しました。もう一度お試しください。");
@@ -257,36 +291,39 @@ export default function POSPage() {
     return Number(cashAmount) - totalAfterCoupon;
   };
 
-  const handlePreOrderNumberPad = (num: string) => {
-    if (num === "C") {
-      if (preOrderStep === "reservation") {
-        setReservationNumber("");
-      } else {
+  const handlePreOrderNumberPad = useCallback(
+    (num: string) => {
+      if (num === "C") {
+        if (preOrderStep === "reservation") {
+          setReservationNumber("");
+        } else {
+          setStudentId("");
+        }
+      } else if (num === "OK") {
+        if (preOrderStep === "reservation" && reservationNumber) {
+          setPreOrderStep("student");
+        } else if (preOrderStep === "student" && studentId) {
+          handleVerifyPreOrder();
+        }
+      } else if (num === "戻る") {
+        setPreOrderStep("reservation");
         setStudentId("");
-      }
-    } else if (num === "OK") {
-      if (preOrderStep === "reservation" && reservationNumber) {
-        setPreOrderStep("student");
-      } else if (preOrderStep === "student" && studentId) {
-        handleVerifyPreOrder();
-      }
-    } else if (num === "戻る") {
-      setPreOrderStep("reservation");
-      setStudentId("");
-    } else {
-      if (preOrderStep === "reservation") {
-        setReservationNumber((prev) => {
-          if (prev.length >= 10) return prev;
-          return prev + num;
-        });
       } else {
-        setStudentId((prev) => {
-          if (prev.length >= 10) return prev;
-          return prev + num;
-        });
+        if (preOrderStep === "reservation") {
+          setReservationNumber((prev) => {
+            if (prev.length >= 10) return prev;
+            return prev + num;
+          });
+        } else {
+          setStudentId((prev) => {
+            if (prev.length >= 10) return prev;
+            return prev + num;
+          });
+        }
       }
-    }
-  };
+    },
+    [preOrderStep, reservationNumber, studentId]
+  );
 
   const handleVerifyPreOrder = async () => {
     if (!reservationNumber || !studentId) {
@@ -577,7 +614,14 @@ export default function POSPage() {
                       : "outline"
                   }
                   className='h-16 text-2xl font-semibold'
-                  onClick={() => handleNumberPadClick(num)}>
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    handleNumberPadClick(num);
+                  }}
+                  onTouchStart={(e) => {
+                    e.preventDefault();
+                    handleNumberPadClick(num);
+                  }}>
                   {num}
                 </Button>
               ))}
@@ -678,7 +722,14 @@ export default function POSPage() {
                         : "outline"
                     }
                     className='h-16 text-2xl font-semibold'
-                    onClick={() => handleCouponNumberPad(num)}>
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      handleCouponNumberPad(num);
+                    }}
+                    onTouchStart={(e) => {
+                      e.preventDefault();
+                      handleCouponNumberPad(num);
+                    }}>
                     {num}
                   </Button>
                 ))}
@@ -742,7 +793,14 @@ export default function POSPage() {
                         : "outline"
                     }
                     className='h-16 text-2xl font-semibold'
-                    onClick={() => handleCashNumberPad(num)}>
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      handleCashNumberPad(num);
+                    }}
+                    onTouchStart={(e) => {
+                      e.preventDefault();
+                      handleCashNumberPad(num);
+                    }}>
                     {num}
                   </Button>
                 ))}
@@ -891,7 +949,18 @@ export default function POSPage() {
                       : "outline"
                   }
                   className='h-16 text-2xl font-semibold'
-                  onClick={() => handlePreOrderNumberPad(num)}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    if (!(isSubmitting && num === "OK")) {
+                      handlePreOrderNumberPad(num);
+                    }
+                  }}
+                  onTouchStart={(e) => {
+                    e.preventDefault();
+                    if (!(isSubmitting && num === "OK")) {
+                      handlePreOrderNumberPad(num);
+                    }
+                  }}
                   disabled={isSubmitting && num === "OK"}>
                   {num === "OK" && isSubmitting && preOrderStep === "student"
                     ? "確認中..."
@@ -985,6 +1054,33 @@ export default function POSPage() {
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* 注文完了ダイアログ */}
+      <Dialog open={isOrderCompleteOpen} onOpenChange={setIsOrderCompleteOpen}>
+        <DialogContent className='sm:max-w-md'>
+          <DialogHeader>
+            <DialogTitle className='text-2xl text-center'>
+              注文が完了しました
+            </DialogTitle>
+          </DialogHeader>
+          <div className='flex flex-col items-center gap-6 py-6'>
+            <div className='flex items-center justify-center w-20 h-20 rounded-full bg-green-100'>
+              <Check className='w-12 h-12 text-green-600' />
+            </div>
+            <div className='text-center space-y-2'>
+              <p className='text-lg font-semibold'>受付番号</p>
+              <p className='text-5xl font-bold text-primary'>
+                {completedOrderNumber}
+              </p>
+            </div>
+          </div>
+          <Button
+            className='w-full h-14 text-lg'
+            onClick={() => setIsOrderCompleteOpen(false)}>
+            閉じる
+          </Button>
         </DialogContent>
       </Dialog>
     </div>

@@ -48,7 +48,11 @@ export async function POST(request: NextRequest) {
 
     const result = await appendOrderToSheet(orderData);
 
-    return NextResponse.json({ success: true, data: result });
+    return NextResponse.json({
+      success: true,
+      data: result,
+      orderNumber: orderNumber.toString(),
+    });
   } catch (error) {
     console.error("Failed to add order:", error);
     return NextResponse.json(
