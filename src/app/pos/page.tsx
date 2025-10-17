@@ -613,15 +613,8 @@ export default function POSPage() {
                       ? "destructive"
                       : "outline"
                   }
-                  className='h-16 text-2xl font-semibold'
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    handleNumberPadClick(num);
-                  }}
-                  onTouchStart={(e) => {
-                    e.preventDefault();
-                    handleNumberPadClick(num);
-                  }}>
+                  className='h-16 text-2xl font-semibold touch-manipulation'
+                  onClick={() => handleNumberPadClick(num)}>
                   {num}
                 </Button>
               ))}
@@ -721,15 +714,8 @@ export default function POSPage() {
                         ? "destructive"
                         : "outline"
                     }
-                    className='h-16 text-2xl font-semibold'
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      handleCouponNumberPad(num);
-                    }}
-                    onTouchStart={(e) => {
-                      e.preventDefault();
-                      handleCouponNumberPad(num);
-                    }}>
+                    className='h-16 text-2xl font-semibold touch-manipulation'
+                    onClick={() => handleCouponNumberPad(num)}>
                     {num}
                   </Button>
                 ))}
@@ -792,15 +778,8 @@ export default function POSPage() {
                         ? "destructive"
                         : "outline"
                     }
-                    className='h-16 text-2xl font-semibold'
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      handleCashNumberPad(num);
-                    }}
-                    onTouchStart={(e) => {
-                      e.preventDefault();
-                      handleCashNumberPad(num);
-                    }}>
+                    className='h-16 text-2xl font-semibold touch-manipulation'
+                    onClick={() => handleCashNumberPad(num)}>
                     {num}
                   </Button>
                 ))}
@@ -948,19 +927,8 @@ export default function POSPage() {
                       ? "destructive"
                       : "outline"
                   }
-                  className='h-16 text-2xl font-semibold'
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    if (!(isSubmitting && num === "OK")) {
-                      handlePreOrderNumberPad(num);
-                    }
-                  }}
-                  onTouchStart={(e) => {
-                    e.preventDefault();
-                    if (!(isSubmitting && num === "OK")) {
-                      handlePreOrderNumberPad(num);
-                    }
-                  }}
+                  className='h-16 text-2xl font-semibold touch-manipulation'
+                  onClick={() => handlePreOrderNumberPad(num)}
                   disabled={isSubmitting && num === "OK"}>
                   {num === "OK" && isSubmitting && preOrderStep === "student"
                     ? "確認中..."
