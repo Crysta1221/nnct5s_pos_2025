@@ -14,7 +14,12 @@ export type CartItem = {
 };
 
 export type PreOrderStep = "reservation" | "student";
-export type CheckoutStep = "payment" | "coupon" | "cash" | "change";
+export type CheckoutStep =
+  | "payment"
+  | "coupon"
+  | "cash"
+  | "change"
+  | "orderNumber";
 
 // カート関連
 export const cartAtom = atom<CartItem[]>([]);
@@ -36,6 +41,7 @@ export const preOrderDataAtom = atom<any>(null);
 
 // 会計関連
 export const checkoutStepAtom = atom<CheckoutStep>("payment");
+export const orderNumberInputAtom = atom("");
 export const couponCountAtom = atom("");
 export const cashAmountAtom = atom("");
 export const totalAfterCouponAtom = atom(0);

@@ -1,9 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-import {
-  appendOrderToSheet,
-  getOrdersFromSheet,
-  getNextOrderNumber,
-} from "@/lib/sheets";
+import { appendOrderToSheet, getOrdersFromSheet } from "@/lib/sheets";
 import type { OrderData } from "@/lib/sheets";
 
 export async function GET() {
@@ -23,17 +19,15 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    if (!body.orderDate) {
+    if (!body.orderDate || !body.orderNumber) {
       return NextResponse.json(
         { success: false, error: "Missing required fields" },
         { status: 400 }
       );
     }
 
-    const orderNumber = await getNextOrderNumber();
-
     const orderData: OrderData = {
-      orderNumber: orderNumber.toString(),
+      orderNumber: body.orderNumber,
       anko: body.anko || 0,
       custard: body.custard || 0,
       appleJam: body.appleJam || 0,
@@ -51,7 +45,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: result,
-      orderNumber: orderNumber.toString(),
+      orderNumber: body.orderNumber,
     });
   } catch (error) {
     console.error("Failed to add order:", error);

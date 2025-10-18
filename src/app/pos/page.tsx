@@ -51,6 +51,7 @@ import {
   preOrderStepAtom,
   preOrderDataAtom,
   checkoutStepAtom,
+  orderNumberInputAtom,
   couponCountAtom,
   cashAmountAtom,
   totalAfterCouponAtom,
@@ -85,6 +86,7 @@ export default function POSPage() {
   );
   const [isCheckoutOpen, setIsCheckoutOpen] = useAtom(isCheckoutOpenAtom);
   const [checkoutStep, setCheckoutStep] = useAtom(checkoutStepAtom);
+  const [orderNumberInput, setOrderNumberInput] = useAtom(orderNumberInputAtom);
   const [couponCount, setCouponCount] = useAtom(couponCountAtom);
   const [cashAmount, setCashAmount] = useAtom(cashAmountAtom);
   const [totalAfterCoupon, setTotalAfterCoupon] = useAtom(totalAfterCouponAtom);
@@ -177,6 +179,23 @@ export default function POSPage() {
     setUsedCouponCount(0);
     setIsCheckoutOpen(true);
   };
+
+  const handleOrderNumberInput = useCallback((num: string) => {
+    setOrderNumberInput((prev) => {
+      if (prev.length < 10) {
+        return prev + num;
+      }
+      return prev;
+    });
+  }, []);
+
+  const handleOrderNumberBackspace = useCallback(() => {
+    setOrderNumberInput((prev) => prev.slice(0, -1));
+  }, []);
+
+  const handleOrderNumberClear = useCallback(() => {
+    setOrderNumberInput("");
+  }, []);
 
   const handlePaymentMethod = (method: "cash" | "coupon") => {
     if (method === "cash") {
@@ -290,6 +309,7 @@ export default function POSPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          orderNumber: orderNumberInput,
           anko: ankoCount,
           custard: custardCount,
           appleJam: appleJamCount,
@@ -308,12 +328,12 @@ export default function POSPage() {
       }
 
       const result = await response.json();
-      const orderNumber = result.orderNumber || "";
 
       setIsCheckoutOpen(false);
       setCart([]);
       setPurchasedItems([]);
       setCheckoutStep("payment");
+      setOrderNumberInput("");
       setCashAmount("");
       setCouponCount("");
       setTotalAfterCoupon(0);
@@ -324,8 +344,8 @@ export default function POSPage() {
       setStudentId("");
       setPreOrderStep("reservation");
 
-      // 受付番号を設定して完了ダイアログを表示
-      setCompletedOrderNumber(orderNumber);
+      // 入力した注文番号を表示して完了ダイアログを表示
+      setCompletedOrderNumber(orderNumberInput);
       setIsOrderCompleteOpen(true);
     } catch (error) {
       console.error("Failed to save order:", error);
@@ -535,16 +555,18 @@ export default function POSPage() {
   };
 
   return (
-    <div className=' bg-background'>
-      <div className='h-screen flex flex-col'>
-        <div className='border-b bg-card p-4'>
+    <div className='bg-background'>
+      <div className='min-h-screen flex flex-col'>
+        <div className='border-b bg-card p-3 sm:p-4'>
           <div className='flex justify-between items-center'>
-            <h1 className='text-2xl font-bold'>高専焼き POSシステム</h1>
+            <h1 className='text-lg sm:text-2xl font-bold'>
+              高専焼き POSシステム
+            </h1>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant='outline'>
-                  <Menu className='w-5 h-5 mr-2' />
-                  メニュー
+                <Button variant='outline' size='sm' className='sm:size-default'>
+                  <Menu className='w-4 h-4 sm:w-5 sm:h-5 sm:mr-2' />
+                  <span className='hidden sm:inline'>メニュー</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align='end'>
@@ -568,26 +590,28 @@ export default function POSPage() {
           </div>
         </div>
 
-        <div className='flex-1 flex overflow-hidden'>
-          <div className='flex-1 border-r flex flex-col'>
-            <div className='flex-1 overflow-y-auto p-6'>
-              <h2 className='text-xl font-semibold mb-4'>商品選択</h2>
-              <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4'>
+        <div className='flex-1 flex flex-col lg:flex-row overflow-hidden'>
+          <div className='flex-1 lg:border-r flex flex-col'>
+            <div className='flex-1 overflow-y-auto p-3 sm:p-6'>
+              <h2 className='text-lg sm:text-xl font-semibold mb-3 sm:mb-4'>
+                商品選択
+              </h2>
+              <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4'>
                 {products.map((product) => (
                   <Card
                     key={product.id}
-                    className='cursor-pointer hover:shadow-lg transition-shadow flex flex-col'
+                    className='cursor-pointer hover:shadow-lg transition-shadow flex flex-row sm:flex-col active:scale-[0.98]'
                     onClick={() => handleProductClick(product)}>
-                    <CardHeader>
-                      <CardTitle className='text-lg'>{product.name}</CardTitle>
-                    </CardHeader>
-                    <CardContent className='flex-1'>
-                      <p className='text-2xl font-bold text-primary'>
+                    <CardHeader className='p-4 sm:p-6 flex-1'>
+                      <CardTitle className='text-base sm:text-lg'>
+                        {product.name}
+                      </CardTitle>
+                      <p className='text-xl sm:text-2xl font-bold text-primary mt-2'>
                         ¥{product.price.toLocaleString()}
                       </p>
-                    </CardContent>
-                    <CardFooter>
-                      <Button className='w-full' size='sm'>
+                    </CardHeader>
+                    <CardFooter className='p-4 sm:p-6 sm:pt-0 flex items-center sm:block'>
+                      <Button className='w-full min-h-[44px]' size='sm'>
                         <Plus className='w-4 h-4 mr-2' />
                         追加
                       </Button>
@@ -597,9 +621,9 @@ export default function POSPage() {
               </div>
             </div>
 
-            <div className='border-t p-6'>
+            <div className='border-t p-3 sm:p-6'>
               <Button
-                className='w-full h-14 text-lg'
+                className='w-full h-12 sm:h-14 text-base sm:text-lg'
                 variant='secondary'
                 onClick={() => setIsPreOrderOpen(true)}>
                 事前予約会計
@@ -607,11 +631,11 @@ export default function POSPage() {
             </div>
           </div>
 
-          <div className='w-96 bg-card flex flex-col'>
-            <div className='flex-1 overflow-y-auto p-6'>
-              <div className='flex items-center justify-between mb-4'>
-                <h2 className='text-xl font-semibold flex items-center gap-2'>
-                  <ShoppingCart className='w-5 h-5' />
+          <div className='w-full lg:w-96 bg-card flex flex-col border-t lg:border-t-0'>
+            <div className='flex-1 overflow-y-auto p-3 sm:p-6'>
+              <div className='flex items-center justify-between mb-3 sm:mb-4'>
+                <h2 className='text-lg sm:text-xl font-semibold flex items-center gap-2'>
+                  <ShoppingCart className='w-4 h-4 sm:w-5 sm:h-5' />
                   カート
                 </h2>
                 <span className='text-sm text-muted-foreground'>
@@ -620,19 +644,21 @@ export default function POSPage() {
               </div>
 
               {cart.length === 0 ? (
-                <div className='text-center text-muted-foreground py-12'>
-                  <ShoppingCart className='w-12 h-12 mx-auto mb-3 opacity-30' />
-                  <p>カートは空です</p>
+                <div className='text-center text-muted-foreground py-8 sm:py-12'>
+                  <ShoppingCart className='w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3 opacity-30' />
+                  <p className='text-sm sm:text-base'>カートは空です</p>
                 </div>
               ) : (
-                <div className='space-y-3'>
+                <div className='space-y-2 sm:space-y-3'>
                   {cart.map((item) => (
                     <Card key={item.product.id}>
-                      <CardContent className='p-4'>
+                      <CardContent className='p-3 sm:p-4'>
                         <div className='flex justify-between items-start mb-2'>
                           <div className='flex-1'>
-                            <p className='font-semibold'>{item.product.name}</p>
-                            <p className='text-sm text-muted-foreground'>
+                            <p className='font-semibold text-sm sm:text-base'>
+                              {item.product.name}
+                            </p>
+                            <p className='text-xs sm:text-sm text-muted-foreground'>
                               ¥{item.product.price.toLocaleString()} ×{" "}
                               {item.quantity}
                             </p>
@@ -640,11 +666,12 @@ export default function POSPage() {
                           <Button
                             variant='ghost'
                             size='icon'
+                            className='h-8 w-8 sm:h-10 sm:w-10'
                             onClick={() => removeFromCart(item.product.id)}>
                             <Trash2 className='w-4 h-4 text-destructive' />
                           </Button>
                         </div>
-                        <p className='text-right font-bold text-lg'>
+                        <p className='text-right font-bold text-base sm:text-lg'>
                           ¥
                           {(
                             item.product.price * item.quantity
@@ -657,15 +684,15 @@ export default function POSPage() {
               )}
             </div>
 
-            <div className='border-t p-6 space-y-4'>
-              <div className='flex justify-between items-center text-2xl font-bold'>
+            <div className='border-t p-3 sm:p-6 space-y-3 sm:space-y-4'>
+              <div className='flex justify-between items-center text-xl sm:text-2xl font-bold'>
                 <span>合計</span>
                 <span className='text-primary'>
                   ¥{totalPrice.toLocaleString()}
                 </span>
               </div>
               <Button
-                className='w-full h-16 text-xl bg-destructive'
+                className='w-full h-14 sm:h-16 text-lg sm:text-xl bg-destructive'
                 size='lg'
                 onClick={handleCheckout}
                 disabled={cart.length === 0}>
@@ -709,6 +736,7 @@ export default function POSPage() {
           setIsCheckoutOpen(open);
           if (!open) {
             setCheckoutStep("payment");
+            setOrderNumberInput("");
             setCashAmount("");
             setCouponCount("");
             setTotalAfterCoupon(0);
@@ -717,37 +745,69 @@ export default function POSPage() {
             setPurchasedItems([]);
           }
         }}>
-        <DialogContent className='sm:max-w-3xl max-h-[85vh]'>
-          <DialogHeader className='mb-6'>
-            <DialogTitle className='text-2xl text-center'>
+        <DialogContent className='sm:max-w-3xl max-h-[90vh] overflow-y-auto'>
+          <DialogHeader className='mb-4 sm:mb-6'>
+            <DialogTitle className='text-xl sm:text-2xl text-center'>
               {checkoutStep === "payment" && "お支払方法を選択してください"}
               {checkoutStep === "coupon" && "クーポン枚数を入力"}
               {checkoutStep === "cash" && "お預かり金額を入力"}
               {checkoutStep === "change" && "お会計完了"}
+              {checkoutStep === "orderNumber" && "注文番号を入力"}
             </DialogTitle>
           </DialogHeader>
 
+          {checkoutStep === "orderNumber" && (
+            <div className='space-y-2 py-2 sm:py-4'>
+              <div className='text-center p-3 bg-muted rounded-lg'>
+                <p className='text-sm text-muted-foreground mb-1'>注文番号</p>
+                <p className='text-xs text-muted-foreground'>
+                  渡す予定の注文番号を入力してください
+                </p>
+              </div>
+              <div className='text-center'>
+                <div className='text-2xl sm:text-3xl font-bold h-14 sm:h-16 flex items-center justify-center border-2 rounded-lg bg-muted overflow-hidden'>
+                  <span className='truncate px-4'>
+                    {orderNumberInput || "番号を入力"}
+                  </span>
+                </div>
+              </div>
+              <NumberKeypad
+                onNumberClick={handleOrderNumberInput}
+                onBackspace={handleOrderNumberBackspace}
+                onClear={handleOrderNumberClear}
+              />
+              <Button
+                className='w-full h-12 sm:h-14 text-lg sm:text-xl font-semibold'
+                onClick={handleCheckoutComplete}
+                disabled={!orderNumberInput || isSubmitting}>
+                {isSubmitting ? "送信中..." : "送信"}
+              </Button>
+            </div>
+          )}
+
           {checkoutStep === "payment" && (
-            <div className='space-y-8 py-4'>
-              <div className='text-center p-8 bg-muted rounded-lg'>
-                <p className='text-lg text-muted-foreground mb-3'>支払金額</p>
-                <p className='text-6xl font-bold text-primary'>
+            <div className='space-y-4 sm:space-y-8 py-2 sm:py-4'>
+              <div className='text-center p-4 sm:p-8 bg-muted rounded-lg'>
+                <p className='text-base sm:text-lg text-muted-foreground mb-2 sm:mb-3'>
+                  支払金額
+                </p>
+                <p className='text-4xl sm:text-6xl font-bold text-primary'>
                   ¥{totalAfterCoupon.toLocaleString()}
                 </p>
               </div>
-              <div className='grid grid-cols-2 gap-6'>
+              <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6'>
                 <Button
-                  className='h-32 text-3xl font-semibold'
+                  className='h-20 sm:h-32 text-xl sm:text-3xl font-semibold'
                   variant='outline'
                   onClick={() => handlePaymentMethod("cash")}>
-                  <Banknote className='size-12 mr-4 text-orange-500' />
+                  <Banknote className='w-8 h-8 sm:w-12 sm:h-12 mr-3 sm:mr-4 text-orange-500' />
                   現金
                 </Button>
                 <Button
-                  className='h-32 text-3xl font-semibold'
+                  className='h-20 sm:h-32 text-xl sm:text-3xl font-semibold'
                   variant='outline'
                   onClick={() => handlePaymentMethod("coupon")}>
-                  <Ticket className='size-12 mr-4 text-yellow-500' />
+                  <Ticket className='w-8 h-8 sm:w-12 sm:h-12 mr-3 sm:mr-4 text-yellow-500' />
                   グルメチケット
                 </Button>
               </div>
@@ -755,16 +815,16 @@ export default function POSPage() {
           )}
 
           {checkoutStep === "coupon" && (
-            <div className='space-y-2 py-4'>
+            <div className='space-y-2 py-2 sm:py-4'>
               <div className='text-center p-3 bg-muted rounded-lg'>
                 <p className='text-sm text-muted-foreground mb-1'>現在の金額</p>
-                <p className='text-2xl font-bold text-primary mb-1'>
+                <p className='text-xl sm:text-2xl font-bold text-primary mb-1'>
                   ¥{totalAfterCoupon.toLocaleString()}
                 </p>
                 <p className='text-xs text-muted-foreground'>1枚 = ¥100</p>
               </div>
               <div className='text-center'>
-                <div className='text-3xl font-bold h-16 flex items-center justify-center border-2 rounded-lg bg-muted overflow-hidden'>
+                <div className='text-2xl sm:text-3xl font-bold h-14 sm:h-16 flex items-center justify-center border-2 rounded-lg bg-muted overflow-hidden'>
                   <span className='truncate px-4'>{couponCount || "0"}枚</span>
                 </div>
               </div>
@@ -775,7 +835,7 @@ export default function POSPage() {
               />
               <Button
                 variant='default'
-                className='w-full h-14 text-xl font-semibold'
+                className='w-full h-12 sm:h-14 text-lg sm:text-xl font-semibold'
                 onClick={() => handleCouponNumberPad("OK")}
                 disabled={!couponCount || Number(couponCount) === 0}>
                 OK
@@ -784,7 +844,7 @@ export default function POSPage() {
           )}
 
           {checkoutStep === "cash" && (
-            <div className='space-y-2 py-4'>
+            <div className='space-y-2 py-2 sm:py-4'>
               <div className='text-center p-3 bg-muted rounded-lg space-y-1'>
                 <div className='flex justify-between text-xs border-b pb-1'>
                   <p className='text-muted-foreground'>小計</p>
@@ -802,13 +862,13 @@ export default function POSPage() {
                 )}
                 <div className='flex justify-between pt-1'>
                   <p className='text-sm font-semibold'>お支払い額</p>
-                  <p className='text-xl font-bold text-primary'>
+                  <p className='text-lg sm:text-xl font-bold text-primary'>
                     ¥{totalAfterCoupon.toLocaleString()}
                   </p>
                 </div>
               </div>
               <div className='text-center'>
-                <div className='text-3xl font-bold h-16 flex items-center justify-center border-2 rounded-lg bg-muted overflow-hidden'>
+                <div className='text-2xl sm:text-3xl font-bold h-14 sm:h-16 flex items-center justify-center border-2 rounded-lg bg-muted overflow-hidden'>
                   <span className='truncate px-4'>
                     ¥{cashAmount ? Number(cashAmount).toLocaleString() : "0"}
                   </span>
@@ -821,7 +881,7 @@ export default function POSPage() {
               />
               <Button
                 variant='default'
-                className='w-full h-14 text-xl font-semibold'
+                className='w-full h-12 sm:h-14 text-lg sm:text-xl font-semibold'
                 onClick={() => handleCashNumberPad("OK")}
                 disabled={
                   totalAfterCoupon > 0 &&
@@ -833,16 +893,16 @@ export default function POSPage() {
           )}
 
           {checkoutStep === "change" && (
-            <div className='space-y-6 py-4'>
-              <div className='border-b pb-4'>
-                <h4 className='font-semibold text-sm text-muted-foreground mb-3'>
+            <div className='space-y-4 sm:space-y-6 py-2 sm:py-4'>
+              <div className='border-b pb-3 sm:pb-4'>
+                <h4 className='font-semibold text-sm text-muted-foreground mb-2 sm:mb-3'>
                   ご購入商品
                 </h4>
-                <div className='space-y-2 max-h-96 overflow-y-auto pr-2'>
+                <div className='space-y-2 max-h-64 sm:max-h-96 overflow-y-auto pr-2'>
                   {purchasedItems.map((item) => (
                     <div
                       key={item.product.id}
-                      className='flex justify-between items-start text-sm'>
+                      className='flex justify-between items-start text-xs sm:text-sm'>
                       <div className='flex-1'>
                         <p className='font-medium'>{item.product.name}</p>
                         <p className='text-xs text-muted-foreground'>
@@ -859,8 +919,8 @@ export default function POSPage() {
               </div>
 
               {/* Summary */}
-              <div className='space-y-2 border-b pb-4'>
-                <div className='flex justify-between text-sm'>
+              <div className='space-y-2 border-b pb-3 sm:pb-4'>
+                <div className='flex justify-between text-xs sm:text-sm'>
                   <p className='text-muted-foreground'>小計</p>
                   <p className='font-semibold'>
                     ¥
@@ -873,14 +933,14 @@ export default function POSPage() {
                   </p>
                 </div>
                 {usedCouponAmount > 0 && (
-                  <div className='flex justify-between text-sm text-green-600'>
+                  <div className='flex justify-between text-xs sm:text-sm text-green-600'>
                     <p>クーポン利用 ×{usedCouponCount}枚</p>
                     <p className='font-semibold'>
                       -¥{usedCouponAmount.toLocaleString()}
                     </p>
                   </div>
                 )}
-                <div className='flex justify-between text-lg font-bold pt-2'>
+                <div className='flex justify-between text-base sm:text-lg font-bold pt-2'>
                   <p>合計</p>
                   <p className='text-primary'>
                     ¥{totalAfterCoupon.toLocaleString()}
@@ -888,8 +948,8 @@ export default function POSPage() {
                 </div>
               </div>
 
-              <div className='space-y-2 pb-4'>
-                <div className='flex justify-between text-sm'>
+              <div className='space-y-2 pb-3 sm:pb-4'>
+                <div className='flex justify-between text-xs sm:text-sm'>
                   <p className='text-muted-foreground'>お預かり</p>
                   <p className='font-semibold'>
                     ¥{Number(cashAmount).toLocaleString()}
@@ -897,17 +957,20 @@ export default function POSPage() {
                 </div>
                 <div className='flex justify-between items-center p-3 bg-primary/10 rounded-lg border-2 border-primary'>
                   <p className='text-sm font-semibold'>おつり</p>
-                  <p className='text-3xl font-bold text-primary'>
+                  <p className='text-2xl sm:text-3xl font-bold text-primary'>
                     ¥{changeAmount.toLocaleString()}
                   </p>
                 </div>
               </div>
 
               <Button
-                className='w-full h-14 text-lg font-semibold'
-                onClick={handleCheckoutComplete}
+                className='w-full h-12 sm:h-14 text-base sm:text-lg font-semibold'
+                onClick={() => {
+                  setCheckoutStep("orderNumber");
+                  setOrderNumberInput("");
+                }}
                 disabled={isSubmitting}>
-                {isSubmitting ? "処理中..." : "完了"}
+                次へ
               </Button>
 
               <div className='text-center pt-2'>
@@ -1065,7 +1128,7 @@ export default function POSPage() {
         <DialogContent className='sm:max-w-md'>
           <DialogHeader>
             <DialogTitle className='text-2xl text-center'>
-              注文が完了しました
+              送信しました
             </DialogTitle>
           </DialogHeader>
           <div className='flex flex-col items-center gap-6 py-6'>
@@ -1073,7 +1136,7 @@ export default function POSPage() {
               <Check className='w-12 h-12 text-green-600' />
             </div>
             <div className='text-center space-y-2'>
-              <p className='text-lg font-semibold'>受付番号</p>
+              <p className='text-lg font-semibold'>注文番号</p>
               <p className='text-5xl font-bold text-primary'>
                 {completedOrderNumber}
               </p>
